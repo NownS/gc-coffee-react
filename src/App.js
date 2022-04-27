@@ -13,7 +13,10 @@ function App() {
     const handleAddClicked = productId => {
         const product = products.find(v => v.productId === productId);
         const found = items.find(v => v.productId === productId);
-        const updatedItems = found ? items.map(v => (v.productId === productId) ? { ...v, count: v.count + 1} : v) : [...items, { ...product, count: 1}]
+        const updatedItems = found ? items.map(v => (v.productId === productId) ? {
+            ...v,
+            count: v.count + 1
+        } : v) : [...items, {...product, count: 1}]
         setItems(updatedItems);
         console.log(products.find(v => v.productId === productId), "added!");
     }
@@ -21,6 +24,31 @@ function App() {
         axios.get('http://localhost:8080/api/v1/products')
             .then(v => setProducts(v.data));
     }, []);
+
+    const handleOrderSubmit = (order) => {
+        if (items.length === 0) {
+            alert("아이템을 추가해 주세요!");
+        } else {
+            axios.post("http://localhost:8080/api/v1/orders", {
+                email: order.email,
+                address: order.address,
+                postcode: order.postcode,
+                orderItems: items.map(v => ({
+                    productId: v.productId,
+                    category: v.category,
+                    price: v.price,
+                    quantity: v.count
+                }))
+            }).then(
+                v => alert("주문이 정상 접수되었습니다."),
+                e => {
+                    alert("서버 장애");
+                    console.error(e);
+            })
+        }
+
+    }
+
     return (
         <div className="container-fluid">
             <div className="row justify-content-center m-4">
@@ -32,7 +60,7 @@ function App() {
                         <ProductList products={products} onAddClick={handleAddClicked}/>
                     </div>
                     <div className="col-md-4 summary p-4">
-                        <Summary items={items}/>
+                        <Summary items={items} onOrderSubmit={handleOrderSubmit}/>
                     </div>
                 </div>
             </div>
